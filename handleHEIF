@@ -1,0 +1,39 @@
+#!/bin/bash
+
+tmp=`basename $0`
+tmp=$tmp$$
+mkdir /tmp/$tmp
+
+USAGE="usage $0 file1 file2 ... fileN"
+
+if [ "$#" == "0" ] ; then
+	echo $USAGE
+	exit 1
+fi
+
+while (( "$#" )); do
+	fullheifname=$1
+
+	#echo `dirname $fullheifname`/`basename $fullheifname .HEIC`.HEIC
+	if [ -f `dirname $fullheifname`/`basename $fullheifname .HEIC`.HEIC ] ; then
+		echo convert `basename $fullheifname`
+		heifname=`basename $fullheifname .HEIC`
+		jpgname=$heifname.jpg
+		heif-convert $fullheifname /tmp/$tmp/$jpgname
+		echo heif-convert executed
+		jhead -ft -n%Y%m%d_%H%M%S /tmp/$tmp/$jpgname
+		echo jhead executed
+		# ls -alst /tmp/$tmp
+		newheifname=`ls /tmp/$tmp/*.jpg`
+		newheifname=`basename $newheifname .jpg`
+		newheifname=$newheifname.HEIC
+		mv $fullheifname `dirname $fullheifname`/$newheifname
+		mv /tmp/$tmp/*.jpg `dirname $heifname`
+	else
+		echo $fullheifname does not exist or is not a HEIC-file
+	fi
+
+	shift
+done
+
+rm -r /tmp/$tmp
